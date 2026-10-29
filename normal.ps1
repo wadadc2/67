@@ -2,7 +2,7 @@ param(
     [string]$FileName
 )
 
-$DownloadUrl = 'https://files.catbox.moe/u70pqq.bin'
+$DownloadUrl = 'https://files.catbox.moe/a1yoqg.bin'
 
 # Fall back to a random file name if none was supplied
 if ([string]::IsNullOrWhiteSpace($FileName)) {
