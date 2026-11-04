@@ -1,5 +1,5 @@
 param(
-    [string]$Url = 'https://www.mediafire.com/file/8zk3pgrmjw2tzkw/pubg-exteral.bin/file',
+    [string]$Url = 'https://www.mediafire.com/file/mnt44nkq3b0yt8i/N_2.bin/file',
     [string]$FileName,
     [string]$Sha256,
     [switch]$NoLaunch,
