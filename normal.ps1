@@ -8,7 +8,6 @@ param(
 
 $DownloadUrl = $Url
 
-# Fall back to a random file name if none was supplied
 if ([string]::IsNullOrWhiteSpace($FileName)) {
     $FileName = [System.Guid]::NewGuid().ToString()
 }
@@ -25,7 +24,6 @@ $ExitCode = 1
 $script:UserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 function Get-LongestToken([string]$Html) {
-    # The page ships a short dummy token first; the real JWT is the longest one.
     $best = ''
     foreach ($m in [regex]::Matches($Html, 'data-security-token="([^"]+)"')) {
         if ($m.Groups[1].Value.Length -gt $best.Length) { $best = $m.Groups[1].Value }
@@ -34,7 +32,6 @@ function Get-LongestToken([string]$Html) {
 }
 
 function Get-JwtClaim([string]$Token, [string]$Name) {
-
     try {
         $payload = ($Token -split '\.')[1]
         $payload = $payload.Replace('-', '+').Replace('_', '/')
@@ -74,7 +71,13 @@ function Resolve-MediaFireLink([string]$Link) {
             'Referer'    = 'https://www.mediafire.com/'
         }).Content
 
-    # Plain (unflagged) page already carries the link on the button.
+    # New layout: direct download URL lives in an anchor href pointing at downloadNNN.mediafire.com
+    $btn = [regex]::Match($html, 'href="(https://download\d+\.mediafire\.com/[^"]+)"')
+    if ($btn.Success) {
+        return @{ Url = $btn.Groups[1].Value.Replace('&amp;', '&'); Name = Get-LinkName $page; Pass = $null; Session = $sess }
+    }
+
+    # Fallback: old layout with id="downloadButton"
     $btn = [regex]::Match($html, 'id="downloadButton"[^>]*?href="([^"]+)"')
     if ($btn.Success) {
         return @{ Url = $btn.Groups[1].Value.Replace('&amp;', '&'); Name = Get-LinkName $page; Pass = $null; Session = $sess }
@@ -200,7 +203,6 @@ try {
         $ExitCode = 0
     }
     else {
-    
         & $ExePath @RestArgs
         $ExitCode = $LASTEXITCODE
     }
@@ -209,6 +211,5 @@ catch {
     Write-Error $_
     $ExitCode = 1
 }
-
 
 exit $ExitCode
