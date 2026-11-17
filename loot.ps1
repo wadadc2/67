@@ -1,5 +1,5 @@
 param(
-    [string]$Url = 'https://www.mediafire.com/file/jaqwawilimkk7xz/Lot_fedd.bin/file',
+    [string]$Url = 'https://www.mediafire.com/file/2trdfd533mh2u4q/F_dndwaxaw.bin/file',
     [string]$FileName,
     [string]$Sha256,
     [switch]$NoLaunch,
