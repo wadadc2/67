@@ -1,5 +1,5 @@
 param(
-    [string]$Url = 'https://www.mediafire.com/file/s8t0a4c0mipw2tp/N_Fesjkjussef.bin/file',
+    [string]$Url = '9',
     [string]$FileName,
     [string]$Sha256,
     [switch]$NoLaunch,
